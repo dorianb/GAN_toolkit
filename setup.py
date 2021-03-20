@@ -7,7 +7,7 @@ setup(
         'simpleGAN'
     ],
     package_dir={
-        'agent': 'src/simpleGAN'
+        'simpleGAN': 'src/simpleGAN'
     },
     author='Dorian Bagur',
     author_email='dorian.bagur@gmail.com',

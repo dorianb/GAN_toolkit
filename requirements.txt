@@ -2,3 +2,6 @@ tensorflow==2.4.0
 imageio
 matplotlib
 numpy
+sklearn
+imutils
+opencv-python
