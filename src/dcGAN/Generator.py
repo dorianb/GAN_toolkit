@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from tensorflow.keras.layers import Conv2DTranspose, BatchNormalization, Activation
 
 
@@ -45,3 +46,17 @@ class Generator:
                 Conv2DTranspose(output_channels, kernel_size, strides=strides),
                 Activation("tanh")
             ])
+
+    @staticmethod
+    def get_noise(n_samples, z_dim):
+        """
+        Get the noise
+
+        Parameters:
+            n_samples: The number of samples
+            z_dim: the dimension of noise
+
+        Returns:
+            a noise tensor
+        """
+        return np.random.randn(n_samples, 1, 1, z_dim)

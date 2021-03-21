@@ -13,7 +13,6 @@ from dcGAN.Generator import Generator
 
 parser = argparse.ArgumentParser(description='Simple GAN for mnist')
 parser.add_argument('--z-dim', type=int, help="Noise dimension", default=64)
-parser.add_argument('--hidden-dim', type=int, help="Hidden layers dimension", default=128)
 parser.add_argument('--lr', type=float, help="Learning rate", default=0.00001)
 parser.add_argument('--epochs', type=int, help="Epochs", default=200)
 parser.add_argument('--batch-size', type=int, help="Batch size", default=256)
@@ -29,10 +28,11 @@ train_images = train_images.reshape((len(train_images), 28, 28, 1))
 train_images = (train_images.astype("float") - 127.5) / 127.5
 
 # Build the generator
-gen = Generator(im_chan=1, hidden_dim=args.hidden_dim).gen
+generator = Generator(im_chan=1, hidden_dim=64)
+gen = generator.gen
 
 # Build the discriminator
-disc = Discriminator(hidden_dim=args.hidden_dim).disc
+disc = Discriminator(hidden_dim=16).disc
 disc_opt = tf.keras.optimizers.Adam(lr=args.lr, beta_1=0.5, beta_2=0.999)
 
 # Compile the discriminative network
@@ -58,7 +58,7 @@ for epoch in range(0, args.epochs):
         # select the next batch of images, then randomly generate
         # noise for the generator to predict on
         imageBatch = train_images[i * args.batch_size:(i + 1) * args.batch_size]
-        noise = np.random.randn(args.batch_size, 1, 1, args.z_dim)
+        noise = generator.get_noise(args.batch_size, args.z_dim)
 
         # generate images using the noise + generator model
         genImages = gen.predict(noise, verbose=0)
@@ -77,7 +77,7 @@ for epoch in range(0, args.epochs):
         # let's now train our generator via the adversarial model by
         # (1) generating random noise and (2) training the generator
         # with the discriminator weights frozen
-        noise = np.random.randn(args.batch_size, 1, 1, args.z_dim)
+        noise = generator.get_noise(args.batch_size, args.z_dim)
         fakeLabels = [1] * args.batch_size
         fakeLabels = np.reshape(fakeLabels, (-1,))
         gan_loss = gan.train_on_batch(noise, fakeLabels)
@@ -90,26 +90,17 @@ for epoch in range(0, args.epochs):
                 epoch + 1, i, disc_loss, gan_loss))
 
             # Make predictions on the benchmark noise
-            noise = np.random.randn(256, 1, 1, args.z_dim)
+            noise = generator.get_noise(256, args.z_dim)
             images_fake = gen.predict(noise)
             images_fake = ((images_fake * 127.5) + 127.5).astype("uint8")
             images_fake = images_fake.reshape(args.batch_size, 28, 28, 1)
             images_fake = np.repeat(images_fake, 3, axis=-1)
 
-            images_real = train_images[np.random.randint(0, len(train_images), 256)]
-            images_real = ((images_real * 127.5) + 127.5).astype("uint8")
-            images_real = images_real.reshape(args.batch_size, 28, 28, 1)
-            images_real = np.repeat(images_real, 3, axis=-1)
-
             vis_fake = build_montages(images_fake, (28, 28), (16, 16))
-            vis_real = build_montages(images_real, (28, 28), (16, 16))
 
             # Write the visualizations to disk
             p_fake = os.path.sep.join([args.output, "epoch_{}_fake.png".format(str(epoch + 1).zfill(4))])
             cv2.imwrite(p_fake, vis_fake[0])
-
-            p_real = os.path.sep.join([args.output, "epoch_{}_real.png".format(str(epoch + 1).zfill(4))])
-            cv2.imwrite(p_real, vis_real[0])
 
 
 
