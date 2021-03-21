@@ -1,12 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, BatchNormalization, ReLU, Activation
+from tensorflow.keras.layers import Dense, BatchNormalization, Activation
 
 
 class Generator:
-
-    def _print(self, x):
-        tf.print(x)
-        return x
 
     def __init__(self, im_dim=784, hidden_dim=128):
         """
@@ -22,7 +18,7 @@ class Generator:
             self.get_generator_block(hidden_dim * 4),
             self.get_generator_block(hidden_dim * 8),
             Dense(im_dim),
-            Activation("sigmoid")
+            Activation("tanh")
         ])
 
     @staticmethod
@@ -41,5 +37,5 @@ class Generator:
         return tf.keras.Sequential(layers=[
             Dense(output_dim),
             BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True),
-            ReLU()
+            Activation("relu")
         ])

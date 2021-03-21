@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, LeakyReLU
+from tensorflow.keras.layers import Dense, LeakyReLU, Activation
 
 
 class Discriminator:
@@ -15,7 +15,8 @@ class Discriminator:
             self.get_discriminator_block(hidden_dim * 4),
             self.get_discriminator_block(hidden_dim * 2),
             self.get_discriminator_block(hidden_dim),
-            Dense(1)
+            Dense(1),
+            Activation("sigmoid")
         ])
 
     @staticmethod

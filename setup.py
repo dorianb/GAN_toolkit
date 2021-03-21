@@ -4,10 +4,10 @@ setup(
     name='GAN_toolkit',
     version='1.0',
     packages=[
-        'simpleGAN'
+        'fcGAN'
     ],
     package_dir={
-        'simpleGAN': 'src/simpleGAN'
+        'fcGAN': 'src/fcGAN'
     },
     author='Dorian Bagur',
     author_email='dorian.bagur@gmail.com',
