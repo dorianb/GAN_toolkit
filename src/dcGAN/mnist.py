@@ -1,13 +1,14 @@
 import argparse
 import tensorflow as tf
 import numpy as np
+from tqdm import tqdm
 import os
 import cv2
 from sklearn.utils import shuffle
 from imutils import build_montages
 
-from fcGAN.Discriminator import Discriminator
-from fcGAN.Generator import Generator
+from dcGAN.Discriminator import Discriminator
+from dcGAN.Generator import Generator
 
 
 parser = argparse.ArgumentParser(description='Simple GAN for mnist')
@@ -16,7 +17,7 @@ parser.add_argument('--hidden-dim', type=int, help="Hidden layers dimension", de
 parser.add_argument('--lr', type=float, help="Learning rate", default=0.00001)
 parser.add_argument('--epochs', type=int, help="Epochs", default=200)
 parser.add_argument('--batch-size', type=int, help="Batch size", default=256)
-parser.add_argument('--output', type=str, help="Path to output", default="../../output/fcGAN")
+parser.add_argument('--output', type=str, help="Path to output", default="../../output/dcGAN")
 args = parser.parse_args()
 
 # Data preparation
@@ -24,29 +25,27 @@ args = parser.parse_args()
 
 train_images = np.concatenate([trainX, testX], axis=0)
 
-train_images = train_images.reshape(len(train_images), -1)
+train_images = train_images.reshape((len(train_images), 28, 28, 1))
 train_images = (train_images.astype("float") - 127.5) / 127.5
 
-im_dim = train_images.shape[-1]
-
 # Build the generator
-gen = Generator(im_dim=im_dim, hidden_dim=args.hidden_dim).gen
+gen = Generator(im_chan=1, hidden_dim=args.hidden_dim).gen
 
 # Build the discriminator
 disc = Discriminator(hidden_dim=args.hidden_dim).disc
-disc_opt = tf.keras.optimizers.Adam(lr=args.lr)
+disc_opt = tf.keras.optimizers.Adam(lr=args.lr, beta_1=0.5, beta_2=0.999)
 
 # Compile the discriminative network
 disc.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=disc_opt)
 
 # Build the adversarial model by first setting the discriminator
-ganInput = tf.keras.Input(shape=(args.z_dim,))
+ganInput = tf.keras.Input(shape=(1, 1, args.z_dim))
 disc.trainable = False
 ganOutput = disc(gen(ganInput))
 gan = tf.keras.Model(ganInput, ganOutput)
 
 # Compile the GAN
-gan_opt = tf.keras.optimizers.Adam(lr=args.lr)
+gan_opt = tf.keras.optimizers.Adam(lr=args.lr, beta_1=0.5, beta_2=0.999)
 gan.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False), optimizer=gan_opt)
 
 for epoch in range(0, args.epochs):
@@ -55,11 +54,11 @@ for epoch in range(0, args.epochs):
     print("[INFO] starting epoch {} of {}...".format(epoch + 1, args.epochs))
     batchesPerEpoch = int(train_images.shape[0] / args.batch_size)
 
-    for i in range(0, batchesPerEpoch):
+    for i in tqdm(range(0, batchesPerEpoch)):
         # select the next batch of images, then randomly generate
         # noise for the generator to predict on
         imageBatch = train_images[i * args.batch_size:(i + 1) * args.batch_size]
-        noise = np.random.randn(args.batch_size, args.z_dim)
+        noise = np.random.randn(args.batch_size, 1, 1, args.z_dim)
 
         # generate images using the noise + generator model
         genImages = gen.predict(noise, verbose=0)
@@ -78,7 +77,7 @@ for epoch in range(0, args.epochs):
         # let's now train our generator via the adversarial model by
         # (1) generating random noise and (2) training the generator
         # with the discriminator weights frozen
-        noise = np.random.randn(args.batch_size, args.z_dim)
+        noise = np.random.randn(args.batch_size, 1, 1, args.z_dim)
         fakeLabels = [1] * args.batch_size
         fakeLabels = np.reshape(fakeLabels, (-1,))
         gan_loss = gan.train_on_batch(noise, fakeLabels)
@@ -91,7 +90,7 @@ for epoch in range(0, args.epochs):
                 epoch + 1, i, disc_loss, gan_loss))
 
             # Make predictions on the benchmark noise
-            noise = np.random.randn(256, args.z_dim)
+            noise = np.random.randn(256, 1, 1, args.z_dim)
             images_fake = gen.predict(noise)
             images_fake = ((images_fake * 127.5) + 127.5).astype("uint8")
             images_fake = images_fake.reshape(args.batch_size, 28, 28, 1)
