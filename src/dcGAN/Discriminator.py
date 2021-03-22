@@ -33,13 +33,13 @@ class Discriminator:
         """
         if not final_layer:
             return tf.keras.Sequential(layers=[
-                Conv2D(output_channels, kernel_size, strides=strides),
+                Conv2D(output_channels, kernel_size, strides=strides, padding="valid"),
                 BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True),
                 LeakyReLU(alpha=0.2)
             ])
         else:
             return tf.keras.Sequential(layers=[
-                Conv2D(output_channels, kernel_size, strides=strides),
+                Conv2D(output_channels, kernel_size, strides=strides, padding="valid"),
                 Activation("sigmoid"),
                 Reshape((1,))
             ])
