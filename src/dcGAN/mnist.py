@@ -12,10 +12,14 @@ from dcGAN.Discriminator import Discriminator
 from dcGAN.Generator import Generator
 
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+
 parser = argparse.ArgumentParser(description='Simple GAN for mnist')
 parser.add_argument('--z-dim', type=int, help="Noise dimension", default=64)
 parser.add_argument('--lr', type=float, help="Learning rate", default=0.0002)
-parser.add_argument('--epochs', type=int, help="Epochs", default=2)
+parser.add_argument('--epochs', type=int, help="Epochs", default=200)
 parser.add_argument('--batch-size', type=int, help="Batch size", default=128)
 parser.add_argument('--output', type=str, help="Path to output", default="../../output/dcGAN")
 args = parser.parse_args()

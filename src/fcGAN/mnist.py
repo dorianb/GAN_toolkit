@@ -10,6 +10,10 @@ from fcGAN.Discriminator import Discriminator
 from fcGAN.Generator import Generator
 
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+
 parser = argparse.ArgumentParser(description='Simple GAN for mnist')
 parser.add_argument('--z-dim', type=int, help="Noise dimension", default=64)
 parser.add_argument('--hidden-dim', type=int, help="Hidden layers dimension", default=128)
